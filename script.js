@@ -1,43 +1,6 @@
-const questions = [
-  {
-    question: "How do you select an element with id 'header' in CSS?",
-    options: ['header', '*header', '#header', '.header'],
-    correct: '#header',
-  },
-  {
-    question: 'Which tag is used to create a hyperlink in HTML?',
-    options: ['<img>', '<a>', '<link>', '<href>'],
-    correct: '<a>',
-  },
-  {
-    question: 'What does CSS stand for?',
-    options: [
-      'Cascading Style Sheets',
-      'Computer Style Sheet',
-      'Colorful Style Sheet',
-      'Creative Style Syntax',
-    ],
-    correct: 'Cascading Style Sheets',
-  },
-  {
-    question: 'Which property changes the background color?',
-    options: ['color', 'background', 'bgcolor', 'background-color'],
-    correct: 'background-color',
-  },
-  {
-    question: 'What symbol is used for class selectors in CSS?',
-    options: ['#', '.', '*', '$'],
-    correct: '.',
-  },
-  {
-    question: 'Which HTML tag is used to define an unordered list?',
-    options: ['<ul>', '<ol>', '<li>', '<list>'],
-    correct: '<ul>',
-  },
-]
-
 let currentQuestion = 0
 let score = 0
+let quizQuestions = []
 
 const questionText = document.getElementById('question-text')
 const optionsContainer = document.getElementById('options-container')
@@ -45,36 +8,47 @@ const questionNumber = document.getElementById('question-number')
 const scoreDisplay = document.getElementById('score')
 const nextBtn = document.getElementById('next-btn')
 
+fetch('quiz-data.json')
+  .then((response) => response.json())
+  .then((data) => {
+    quizQuestions = data['Web Development']
+    loadQuestion()
+  })
+  .catch((error) => {
+    console.error('Failed to load quiz data:', error)
+    questionText.textContent = 'Failed to load quiz. Please try again later.'
+  })
+
 function loadQuestion() {
-  const q = questions[currentQuestion]
+  const q = quizQuestions[currentQuestion]
   questionText.textContent = q.question
   questionNumber.textContent = `Question ${currentQuestion + 1} of ${
-    questions.length
+    quizQuestions.length
   }`
   optionsContainer.innerHTML = ''
   nextBtn.disabled = true
 
-  q.options.forEach((option) => {
+  q.choices.forEach((choice) => {
     const button = document.createElement('button')
-    button.textContent = option
+    button.textContent = choice
     button.className = 'option-btn'
-    button.onclick = () => handleAnswer(button, option)
+    button.onclick = () => handleAnswer(button, choice)
     optionsContainer.appendChild(button)
   })
 }
 
 function handleAnswer(button, selected) {
-  const q = questions[currentQuestion]
-  const isCorrect = selected === q.correct
+  const q = quizQuestions[currentQuestion]
+  const isCorrect = selected === q.answer
 
   if (isCorrect) {
-    button.style.backgroundColor = '#a8e6a1'
+    button.style.backgroundColor = '#a8e6a1' // Green
     score++
     scoreDisplay.textContent = `Score: ${score}`
   } else {
-    button.style.backgroundColor = '#f8a1a1'
+    button.style.backgroundColor = '#f8a1a1' // Red
     const correctBtn = [...optionsContainer.children].find(
-      (btn) => btn.textContent === q.correct
+      (btn) => btn.textContent === q.answer
     )
     if (correctBtn) correctBtn.style.backgroundColor = '#a8e6a1'
   }
@@ -85,7 +59,7 @@ function handleAnswer(button, selected) {
 
 nextBtn.onclick = () => {
   currentQuestion++
-  if (currentQuestion < questions.length) {
+  if (currentQuestion < quizQuestions.length) {
     loadQuestion()
   } else {
     showFinalScore()
@@ -93,10 +67,8 @@ nextBtn.onclick = () => {
 }
 
 function showFinalScore() {
-  questionText.textContent = `Quiz Complete! Your final score is ${score} out of ${questions.length}.`
+  questionText.textContent = `Quiz Complete! Your final score is ${score} out of ${quizQuestions.length}.`
   optionsContainer.innerHTML = ''
   nextBtn.style.display = 'none'
   questionNumber.textContent = ''
 }
-
-loadQuestion()
